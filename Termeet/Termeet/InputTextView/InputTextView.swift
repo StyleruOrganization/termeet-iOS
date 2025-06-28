@@ -144,7 +144,7 @@ private extension InputTextView {
         .font(Constants.Fonts.textField)
         .onChange(of: text) { newValue in
             configuration.onTextChange?(newValue)
-        }
+        }.frame(height: 44)
     }
 
     var secureToggleButton: some View {
@@ -153,8 +153,8 @@ private extension InputTextView {
                 Image(isShowingText ? Constants.Icons.hideTextButton : Constants.Icons.showTextButton)
                     .resizable()
                     .frame(
-                        maxWidth: Constants.Icons.iconSize,
-                        maxHeight: Constants.Icons.iconSize
+                        width: Constants.Icons.iconSize,
+                        height: Constants.Icons.iconSize
                     )
                     .onTapGesture {
                         isShowingText.toggle()

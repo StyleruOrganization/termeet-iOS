@@ -13,8 +13,9 @@ struct TermeetApp: App {
 
     var body: some Scene {
         WindowGroup {
-            NavigationStack(path: $router.path) {
-                RootView()
+            NavigationStack(path: router.bindingNavigationStack()) {
+                PasswordRecoveryView()
+                    .globalNavigationDestination(router: router)
             }.environmentObject(router)
         }
     }
