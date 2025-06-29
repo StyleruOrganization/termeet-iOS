@@ -1,8 +1,10 @@
 import SwiftUI
 import UIKit
+import OSLog
 
 private enum Constants {
     static let navigationDebounceInterval: TimeInterval = 0.5
+    static let loggerCategory = "Routing"
 }
 
 protocol Routable {
@@ -39,6 +41,20 @@ final class Router: ObservableObject {
     private(set) var onDismissPresentedSheet: (() -> Void)?
     private(set) var onDismissFullScreenCover: (() -> Void)?
     private var isNavigating = false
+    private let id = UUID()
+    private let logger: Logger
+
+    init() {
+        logger = Logger(
+            subsystem: Bundle.main.bundleIdentifier ?? "Unknown",
+            category: "\(Constants.loggerCategory):\(self.id)"
+        )
+        logger.info("Initialized router")
+    }
+
+    deinit {
+        logger.info("Deinitialized router")
+    }
 
     var bindingNavigationStack: Binding<[RouterContainer]> {
         .init(
@@ -47,8 +63,8 @@ final class Router: ObservableObject {
             },
             set: { [weak self] value in
                 self?.containers = value
+                self?.logger.debug("Navigation stack manually set to \("\(value.count)") containers")
             }
-
         )
     }
 
@@ -59,6 +75,7 @@ final class Router: ObservableObject {
             },
             set: { [weak self] value in
                 self?.presentedSheetContainer = value
+                self?.logger.info("presentedSheetContainer changed: \(String(describing: value))")
             }
         )
     }
@@ -70,23 +87,30 @@ final class Router: ObservableObject {
             },
             set: { [weak self] value in
                 self?.fullScreenCoverContainer = value
+                self?.logger.info("fullScreenCoverContainer changed: \(String(describing: value))")
             }
         )
     }
 
     func navigate(to route: Routable, isDoubleTapProtectionEnabled: Bool = true) {
+        logger.debug("navigate(to:) called; protectionEnabled=\(isDoubleTapProtectionEnabled)")
+
         if isDoubleTapProtectionEnabled {
             guard !isNavigating else {
+                logger.error("navigate(to:) blocked by debounce (isNavigating=true)")
                 return
             }
             isNavigating = true
+            logger.debug("Debounce activated for \(Constants.navigationDebounceInterval) seconds")
             DispatchQueue.main.asyncAfter(deadline: .now() + Constants.navigationDebounceInterval) { [weak self] in
                 self?.isNavigating = false
+                self?.logger.debug("Debounce expired; isNavigating=false")
             }
-
         }
+
         let container = RouterContainer(viewController: route.makeViewController())
         containers.append(container)
+        logger.info("Pushed new view controller. Stack size now \(self.containers.count)")
     }
 
     func present(route: Routable, type: PresentType = .sheet, onDismiss: (() -> Void)? = nil) {
@@ -95,9 +119,11 @@ final class Router: ObservableObject {
         case .sheet:
             presentedSheetContainer = container
             onDismissPresentedSheet = onDismiss
+            logger.info("Presented sheet: \(container.id.uuidString)")
         case .fullScreen:
             fullScreenCoverContainer = container
             onDismissFullScreenCover = onDismiss
+            logger.info("Presented fullScreen cover: \(container.id.uuidString)")
         }
     }
 
@@ -106,18 +132,26 @@ final class Router: ObservableObject {
         case .sheet:
             presentedSheetContainer = nil
             onDismissPresentedSheet = nil
+            logger.info("Dismissed sheet")
         case .fullScreen:
             fullScreenCoverContainer = nil
             onDismissFullScreenCover = nil
+            logger.info("Dismissed fullScreen cover")
         }
     }
 
     func pop() {
+        guard !containers.isEmpty else {
+            logger.error("pop() called on empty navigation stack")
+            return
+        }
         containers.removeLast()
+        logger.info("Popped view controller. Stack size now \(self.containers.count)")
     }
 
     func popToRoot() {
         containers.removeAll()
+        logger.info("Popped to root")
     }
 }
 
@@ -140,29 +174,27 @@ extension View {
 
     func globalFullCoverScreen(router: Router) -> some View {
         let view = self
-            .fullScreenCover(item: router.bindingFullScreenCoverContainer, onDismiss: { router.onDismissFullScreenCover?() }) { container in
-                ViewControllerWrapper {
-                    container.viewController
-                }
-            }
+            .fullScreenCover(
+                item: router.bindingFullScreenCoverContainer,
+                onDismiss: { router.onDismissFullScreenCover?() },
+                content: { container in ViewControllerWrapper { container.viewController } }
+            )
         return view
     }
 
     func globalPresentedSheet(router: Router) -> some View {
         let view = self
-            .sheet(item: router.bindingPresentedSheetContainer, onDismiss: { router.onDismissPresentedSheet?() }) { container in
-                ViewControllerWrapper {
-                    container.viewController
-                }
-            }
+            .sheet(
+                item: router.bindingPresentedSheetContainer,
+                onDismiss: { router.onDismissPresentedSheet?() },
+                content: { container in ViewControllerWrapper { container.viewController } }
+            )
         return view
     }
 }
 
 struct ViewControllerWrapper<VC: UIViewController>: UIViewControllerRepresentable {
-    func updateUIViewController(_ uiViewController: VC, context: Context) {
-
-    }
+    func updateUIViewController(_ uiViewController: VC, context: Context) {}
 
     private let makeViewController: () -> VC
 
