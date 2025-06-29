@@ -1,6 +1,10 @@
 import SwiftUI
 import UIKit
 
+private enum Constants {
+    static let navigationDebounceInterval: TimeInterval = 0.5
+}
+
 protocol Routable {
     func makeViewController() -> UIViewController
 }
@@ -34,6 +38,7 @@ final class Router: ObservableObject {
     @Published private(set) var fullScreenCoverContainer: RouterContainer?
     private(set) var onDismissPresentedSheet: (() -> Void)?
     private(set) var onDismissFullScreenCover: (() -> Void)?
+    private var isNavigating = false
 
     var bindingNavigationStack: Binding<[RouterContainer]> {
         .init(
@@ -69,7 +74,17 @@ final class Router: ObservableObject {
         )
     }
 
-    func navigate(to route: Routable) {
+    func navigate(to route: Routable, isDoubleTapProtectionEnabled: Bool = true) {
+        if isDoubleTapProtectionEnabled {
+            guard !isNavigating else {
+                return
+            }
+            isNavigating = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + Constants.navigationDebounceInterval) { [weak self] in
+                self?.isNavigating = false
+            }
+
+        }
         let container = RouterContainer(viewController: route.makeViewController())
         containers.append(container)
     }
