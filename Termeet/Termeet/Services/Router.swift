@@ -11,6 +11,8 @@ protocol Routable {
     func makeViewController() -> UIViewController
 }
 
+// MARK: RouterContainer
+
 struct RouterContainer: Hashable, Identifiable {
     let viewController: UIViewController
     private let identifier = UUID()
@@ -29,6 +31,8 @@ struct RouterContainer: Hashable, Identifiable {
         hasher.combine(id)
     }
 }
+
+// MARK: Router
 
 final class Router: ObservableObject {
     enum PresentType {
@@ -155,6 +159,8 @@ final class Router: ObservableObject {
     }
 }
 
+// MARK: support extensions
+
 extension View {
     func convertToViewController() -> UIViewController {
         UIHostingController(rootView: self)
@@ -190,19 +196,5 @@ extension View {
                 content: { container in ViewControllerWrapper { container.viewController } }
             )
         return view
-    }
-}
-
-struct ViewControllerWrapper<VC: UIViewController>: UIViewControllerRepresentable {
-    func updateUIViewController(_ uiViewController: VC, context: Context) {}
-
-    private let makeViewController: () -> VC
-
-    init(_ makeViewController: @escaping () -> VC) {
-        self.makeViewController = makeViewController
-    }
-
-    func makeUIViewController(context: Context) -> VC {
-        makeViewController()
     }
 }
