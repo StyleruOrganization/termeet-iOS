@@ -29,11 +29,13 @@ final class Router: ObservableObject {
         case sheet, fullScreen
     }
 
-    @Published private var containers = [RouterContainer]()
-    @Published private var presentedSheetContainer: RouterContainer?
-    @Published private var fullCoverScreenContainer: RouterContainer?
+    @Published private(set) var containers = [RouterContainer]()
+    @Published private(set) var presentedSheetContainer: RouterContainer?
+    @Published private(set) var fullScreenCoverContainer: RouterContainer?
+    private(set) var onDismissPresentedSheet: (() -> Void)?
+    private(set) var onDismissFullScreenCover: (() -> Void)?
 
-    func bindingNavigationStack() -> Binding<[RouterContainer]> {
+    var bindingNavigationStack: Binding<[RouterContainer]> {
         .init(
             get: { [weak self] in
                 self?.containers ?? []
@@ -45,7 +47,7 @@ final class Router: ObservableObject {
         )
     }
 
-    func bindingPresentedSheetContainer() -> Binding<RouterContainer?> {
+    var bindingPresentedSheetContainer: Binding<RouterContainer?> {
         .init(
             get: { [weak self] in
                 self?.presentedSheetContainer
@@ -56,13 +58,13 @@ final class Router: ObservableObject {
         )
     }
 
-    func bindingFullScreenCoverContainer() -> Binding<RouterContainer?> {
+    var bindingFullScreenCoverContainer: Binding<RouterContainer?> {
         .init(
             get: { [weak self] in
-                self?.fullCoverScreenContainer
+                self?.fullScreenCoverContainer
             },
             set: { [weak self] value in
-                self?.fullCoverScreenContainer = value
+                self?.fullScreenCoverContainer = value
             }
         )
     }
@@ -72,13 +74,15 @@ final class Router: ObservableObject {
         containers.append(container)
     }
 
-    func present(route: Routable, type: PresentType = .sheet) {
+    func present(route: Routable, type: PresentType = .sheet, onDismiss: (() -> Void)? = nil) {
         let container = RouterContainer(viewController: route.makeViewController())
         switch type {
         case .sheet:
             presentedSheetContainer = container
+            onDismissPresentedSheet = onDismiss
         case .fullScreen:
-            fullCoverScreenContainer = container
+            fullScreenCoverContainer = container
+            onDismissFullScreenCover = onDismiss
         }
     }
 
@@ -86,8 +90,10 @@ final class Router: ObservableObject {
         switch type {
         case .sheet:
             presentedSheetContainer = nil
+            onDismissPresentedSheet = nil
         case .fullScreen:
-            fullCoverScreenContainer = nil
+            fullScreenCoverContainer = nil
+            onDismissFullScreenCover = nil
         }
     }
 
@@ -119,7 +125,7 @@ extension View {
 
     func globalFullCoverScreen(router: Router) -> some View {
         let view = self
-            .fullScreenCover(item: router.bindingFullScreenCoverContainer()) { container in
+            .fullScreenCover(item: router.bindingFullScreenCoverContainer, onDismiss: { router.onDismissFullScreenCover?() }) { container in
                 ViewControllerWrapper {
                     container.viewController
                 }
@@ -129,7 +135,7 @@ extension View {
 
     func globalPresentedSheet(router: Router) -> some View {
         let view = self
-            .sheet(item: router.bindingPresentedSheetContainer()) { container in
+            .sheet(item: router.bindingPresentedSheetContainer, onDismiss: { router.onDismissPresentedSheet?() }) { container in
                 ViewControllerWrapper {
                     container.viewController
                 }
