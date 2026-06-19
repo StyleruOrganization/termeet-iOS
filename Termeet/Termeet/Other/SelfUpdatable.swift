@@ -5,7 +5,6 @@
 //  Created by Daniil Sukhanov on 26.05.2025.
 //
 
-
 /**
 Protocol enabling self-modification via closure.
 Provides default implementation for mutable updates.

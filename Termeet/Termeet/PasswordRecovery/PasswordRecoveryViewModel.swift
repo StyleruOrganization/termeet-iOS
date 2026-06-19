@@ -51,14 +51,13 @@ private enum ContainerUUIDs {
 }
 
 final class PasswordRecoveryViewModel: ObservableObject {
-    let stateView: StateView
+    let stateView: PasswordRecoveryView.Route
     private var router: Router?
     private var tempTimer: Timer?
     private var repeatSendEmailTimer: Timer?
 
-    init(router: Router? = nil, stateView: StateView = .inputEmail) {
+    init(stateView: PasswordRecoveryView.Route = .inputEmail) {
         self.stateView = stateView
-        self.router = router
         initContainers()
         initConfirmButton()
     }
@@ -78,12 +77,6 @@ final class PasswordRecoveryViewModel: ObservableObject {
         self.router = router
     }
 
-}
-
-extension PasswordRecoveryViewModel {
-    enum StateView: Hashable {
-        case inputEmail, sendingLetter, inputNewPassword
-    }
 }
 
 // MARK: Containers
@@ -181,7 +174,7 @@ extension PasswordRecoveryViewModel {
                 $0.title = Constants.Texts.confirmSendEmail
                 $0.isEnabled = false
                 $0.footerTextButton = Constants.Texts.returnToLogin
-                $0.action = { self.router?.path.append(Route.passwordRecoverySendingLetter) }
+                $0.action = { self.router?.navigate(to: PasswordRecoveryView.Route.sendingLetter) }
                 $0.footerTextActionButton = { self.router?.popToRoot() }
             }
         case .sendingLetter:
@@ -189,7 +182,7 @@ extension PasswordRecoveryViewModel {
                 $0.title = Constants.Texts.confirmResend
                 $0.isEnabled = false
                 $0.footerTextButton = Constants.Texts.returnToLogin
-                $0.action = { self.router?.path.append(Route.passwordRecoveryInputNewPassword) }
+                $0.action = { self.router?.navigate(to: PasswordRecoveryView.Route.inputNewPassword) }
                 $0.footerTextActionButton = { self.router?.popToRoot() }
             }
         case .inputNewPassword:
@@ -275,7 +268,7 @@ extension PasswordRecoveryViewModel {
             guard let self else {
                 return
             }
-            self.router?.path.append(Route.passwordRecoveryInputNewPassword)
+            self.router?.navigate(to: PasswordRecoveryView.Route.inputNewPassword)
             timer.invalidate()
             self.tempTimer = nil
         })

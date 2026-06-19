@@ -33,6 +33,7 @@ private enum Constants {
         static let textFieldPadding = EdgeInsets(top: 12.5, leading: 12, bottom: 12.5, trailing: 12)
         static let elementSpacing: CGFloat = 8
         static let footerPadding: CGFloat = 4
+        static let textFieldHeight: CGFloat = 44
     }
 }
 
@@ -104,7 +105,7 @@ private extension InputTextView {
                     (text.isEmpty ? configuration.footerColor : configuration.boardColor),
                     lineWidth: 1
                 )
-        )
+        ).frame(height: Constants.Layouts.textFieldHeight)
     }
 
     var footerView: some View {
@@ -153,8 +154,8 @@ private extension InputTextView {
                 Image(isShowingText ? Constants.Icons.hideTextButton : Constants.Icons.showTextButton)
                     .resizable()
                     .frame(
-                        maxWidth: Constants.Icons.iconSize,
-                        maxHeight: Constants.Icons.iconSize
+                        width: Constants.Icons.iconSize,
+                        height: Constants.Icons.iconSize
                     )
                     .onTapGesture {
                         isShowingText.toggle()

@@ -73,19 +73,6 @@ struct PasswordRecoveryView: View {
         .onDisappear {
             viewModel.endCheckingAnswerEmail()
         }
-        .navigationDestination(for: Route.self) { route in
-            let destinationView: PasswordRecoveryView? = {
-                switch route {
-                case .passwordRecoverySendingLetter:
-                    return PasswordRecoveryView(viewModel: .init(router: router, stateView: .sendingLetter))
-                case .passwordRecoveryInputNewPassword:
-                    return PasswordRecoveryView(viewModel: .init(router: router, stateView: .inputNewPassword))
-                default:
-                    return nil
-                }
-            }()
-            destinationView
-        }
     }
 
     var inputTextViews: some View {
@@ -99,18 +86,20 @@ struct PasswordRecoveryView: View {
     }
 }
 
-struct PasswordRecoveryView_Previews: PreviewProvider {
-    struct ContainerPreview: View {
-        @StateObject private var router = Router()
+extension PasswordRecoveryView {
+    enum Route: Routable {
+        case inputNewPassword, sendingLetter, inputEmail
 
-        var body: some View {
-            NavigationStack(path: $router.path) {
-                PasswordRecoveryView()
-            }.environmentObject(router)
+        func makeViewController() -> UIViewController {
+            switch self {
+            case .inputNewPassword:
+                PasswordRecoveryView(viewModel: .init(stateView: .inputNewPassword)).convertToViewController()
+            case .sendingLetter:
+                PasswordRecoveryView(viewModel: .init(stateView: .sendingLetter)).convertToViewController()
+            case .inputEmail:
+                PasswordRecoveryView(viewModel: .init(stateView: .inputEmail)).convertToViewController()
+
+            }
         }
-    }
-
-    static var previews: some View {
-        ContainerPreview()
     }
 }
