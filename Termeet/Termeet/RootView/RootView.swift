@@ -48,7 +48,7 @@ private enum Constants {
 }
 
 struct RootView: View {
-   enum Tab: Int {
+    enum Tab: Int {
         case meets, teams, createMeet, notifications, profile
     }
 
@@ -59,44 +59,31 @@ struct RootView: View {
     }
 
     @State var selectedTab: Tab = .profile
-    @StateObject private var router = Router()
 
     var body: some View {
-        NavigationStack(path: $router.path) {
-            VStack(spacing: 0) {
-                tabContent(selectedTab)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                TabBar(
-                    selected: $selectedTab,
-                    items: Constants.icons
-                ) { item in
-                    Image(selectedTab != item.id ? item.normalImage : item.selectedImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(
-                            maxWidth: Constants.Size.heightImageTabBar,
-                            maxHeight: Constants.Size.widthImageTabBar
-                        )
-                } background: {
-                    Constants.Colors.backgroundTabBar
-                }
-                .frame(maxHeight: Constants.Size.heightTabBar)
-                .edgesIgnoringSafeArea(.bottom)
+        VStack(spacing: 0) {
+            tabContent(selectedTab)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            TabBar(
+                selected: $selectedTab,
+                items: Constants.icons
+            ) { item in
+                Image(selectedTab != item.id ? item.normalImage : item.selectedImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(
+                        maxWidth: Constants.Size.heightImageTabBar,
+                        maxHeight: Constants.Size.widthImageTabBar
+                    )
+            } background: {
+                Constants.Colors.backgroundTabBar
             }
-            .ignoresSafeArea(.all, edges: .bottom)
-            .navigationDestination(for: Route.self) { route in
-                switch route {
-                case .detail: RootView() // Detail view
-                case .settings: RootView() // Settings view
-                }
-            }
+            .frame(maxHeight: Constants.Size.heightTabBar)
+            .edgesIgnoringSafeArea(.bottom)
         }
-        .environmentObject(router)
-        .sheet(item: $router.presentedSheet) { _ in
-            RootView() // RootView(route: route)
-                .onDisappear { router.dismiss() }
-        }
+        .ignoresSafeArea(.all, edges: .bottom)
     }
+
 }
 
 private extension RootView {
@@ -110,11 +97,3 @@ private extension RootView {
         }
     }
 }
-
-#if DEBUG
-
-#Preview {
-    RootView()
-}
-
-#endif

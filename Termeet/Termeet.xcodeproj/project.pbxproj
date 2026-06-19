@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E45585482DE4FC2500D66640 /* Documentation.docc in Sources */ = {isa = PBXBuildFile; fileRef = E45585472DE4FC2500D66640 /* Documentation.docc */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		33853A092DC23DB10087512B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		338539F92DC23DAD0087512B /* Termeet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Termeet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		33853A082DC23DB10087512B /* TermeetTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TermeetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		33853A122DC23DB20087512B /* TermeetUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TermeetUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E45585472DE4FC2500D66640 /* Documentation.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = Documentation.docc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +80,7 @@
 		338539F02DC23DAD0087512B = {
 			isa = PBXGroup;
 			children = (
+				E45585472DE4FC2500D66640 /* Documentation.docc */,
 				338539FB2DC23DAD0087512B /* Termeet */,
 				33853A0B2DC23DB10087512B /* TermeetTests */,
 				33853A152DC23DB20087512B /* TermeetUITests */,
@@ -258,6 +264,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E45585482DE4FC2500D66640 /* Documentation.docc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
