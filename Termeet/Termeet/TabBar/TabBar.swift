@@ -107,3 +107,59 @@ extension TabBar {
         return copy
     }
 }
+
+#Preview {
+    struct PreviewContainer: View {
+        struct TabItem: Identifiable {
+            let id: String
+            let title: String
+            let icon: String
+        }
+
+        @State private var selectedID = "home"
+
+        let items = [
+            TabItem(id: "home", title: "Home", icon: "house.fill"),
+            TabItem(id: "search", title: "Search", icon: "magnifyingglass"),
+            TabItem(id: "profile", title: "Profile", icon: "person.fill"),
+            TabItem(id: "search2", title: "Search", icon: "magnifyingglass"),
+            TabItem(id: "profile2", title: "Profile", icon: "person.fill")
+        ]
+
+        var body: some View {
+            VStack(spacing: 20) {
+                Spacer()
+                Text("Selected: \(selectedID)")
+                    .font(.title2)
+                    .padding()
+
+                TabBar(
+                    selected: $selectedID,
+                    items: items,
+                    axis: .horizontal
+                ) { item in
+                    VStack {
+                        Image(systemName: item.icon)
+                            .font(.title2)
+                        Text(item.title)
+                            .font(.caption)
+                    }
+                    .foregroundColor(selectedID == item.id ? .blue : .gray)
+                } background: {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color(.systemBackground))
+                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: -2)
+                }
+                .onAnimationSelect { .spring(response: 0.4, dampingFraction: 0.7) }
+                .padding(.horizontal)
+                .padding(.bottom, 8)
+                .frame(maxHeight: 60)
+            }
+            .padding(.vertical)
+            .background(Color(.secondarySystemBackground).ignoresSafeArea())
+
+        }
+    }
+
+    return PreviewContainer()
+}

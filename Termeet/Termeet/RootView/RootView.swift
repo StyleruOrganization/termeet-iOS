@@ -39,7 +39,7 @@ private enum Constants {
     enum Size {
         static let heightImageTabBar: CGFloat = 40
         static let widthImageTabBar: CGFloat = 40
-        static let heightTabBar: CGFloat = 84
+        static let heightTabBar: CGFloat = 56
     }
 
     enum Colors {
@@ -77,9 +77,15 @@ struct RootView: View {
                     )
             } background: {
                 Constants.Colors.backgroundTabBar
+                    .clipShape(RoundedRectangle(cornerRadius: 100))
+                    .shadow(color: Color.black.opacity(0.05), radius: 15, x: 0, y: 4)
+
             }
             .frame(maxHeight: Constants.Size.heightTabBar)
             .edgesIgnoringSafeArea(.bottom)
+            .padding(.leading, 32)
+            .padding(.trailing, 32)
+            .padding(.bottom, 50)
         }
         .ignoresSafeArea(.all, edges: .bottom)
     }
