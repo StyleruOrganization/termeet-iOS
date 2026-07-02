@@ -13,11 +13,8 @@ struct TermeetApp: App {
 
     var body: some Scene {
         WindowGroup {
-            NavigationStack(path: router.bindingNavigationStack) {
+            RouterView(router: router) {
                 RootView()
-                    .globalNavigationDestination(router: router)
-                    .globalPresentedSheet(router: router)
-                    .globalFullCoverScreen(router: router)
             }.environmentObject(router)
         }
     }

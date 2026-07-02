@@ -1,15 +1,16 @@
 //
 //  ViewControllerWrapper.swift
-//  Termeet
+//  CameraControl
 //
-//  Created by Daniil Sukhanov on 29.06.2025.
+//  Created by Daniil Sukhanov on 29.11.2025.
 //
 
 import UIKit
 import SwiftUI
 
 struct ViewControllerWrapper<VC: UIViewController>: UIViewControllerRepresentable {
-    func updateUIViewController(_ uiViewController: VC, context: Context) {}
+    func updateUIViewController(_ uiViewController: VC, context: Context) {
+    }
 
     private let makeViewController: () -> VC
 
@@ -18,6 +19,7 @@ struct ViewControllerWrapper<VC: UIViewController>: UIViewControllerRepresentabl
     }
 
     func makeUIViewController(context: Context) -> VC {
-        makeViewController()
+        let viewController = makeViewController()
+        return viewController
     }
 }

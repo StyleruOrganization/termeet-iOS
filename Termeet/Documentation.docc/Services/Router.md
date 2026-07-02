@@ -1,227 +1,64 @@
 # ``Router``
 
-**Internal SwiftUI routing component** for managing navigation stacks, sheets, and full-screen covers using UIKit view controllers.  
 
----
+**Внутренний компонент маршрутизации SwiftUI** для управления стеком навигации, sheet-представлениями и полноэкранными cover-экранами через UIKit view controller’ы.
 
-## Design Rationale  
+## Назначение
 
-### Why RouterContainer?  
-`RouterContainer` solves two key problems:  
-1. Provides stable identifiers for navigation paths  
-2. Enables type-erasure for different view controller types  
+`Router` используется как центральная точка переходов между экранами приложения. Он:
+- хранит стек маршрутов;
+- умеет открывать модальные экраны;
+- синхронизирует состояние SwiftUI с `UINavigationController`;
+- снижает риск повторных переходов с помощью debounce-защиты.
 
-### Debounce Mechanism  
-Navigation requests are throttled to prevent:  
-- Accidental double-taps  
-- Navigation conflicts during animations  
-- Race conditions in state updates  
+## Ключевые типы рядом с ним
 
-**Default interval**: `0.5s` (configurable via `Constants.navigationDebounceInterval`).  
+- `Routable` — протокол, который должен уметь построить `UIViewController`.
+- `RouterContainer` — обёртка над конкретным view controller’ом.
+- `PresentType` — тип модального показа: `.sheet` или `.fullScreen`.
+- `RouterView` — готовая обёртка для корневого SwiftUI-экрана.
+- `RouterNavigationControllerHost` — мост между SwiftUI и UIKit.
 
----
+## Поведение
 
-## Overview  
-The `Router` is a lightweight helper for in-app navigation, providing:  
+### Навигация
+Метод `navigate(to:)` добавляет новый контроллер в стек.  
+Если включена защита от двойного нажатия, повторный вызов блокируется на интервал, заданный в `Constants.navigationDebounceInterval` (`0.5s` по умолчанию).
 
-* **Debounced Navigation**: Prevents rapid pushes with configurable interval  
-* **Modal Presentation**: Unified API for sheets and full-screen covers  
-* **Pop & Reset**: Simple `pop()` and `popToRoot()` methods  
-* **SwiftUI Integration**: Built-in view modifiers for seamless binding  
-* **Lifecycle Tracking**: OSLog integration for debugging  
+### Модальные окна
+`present(route:type:onDismiss:)` показывает экран как sheet или full-screen cover.  
+`dismiss(type:)` закрывает соответствующее представление и очищает callback закрытия.
 
-![Preview](RouterDiagram.svg)
+### Управление стеком
+`pop()` удаляет верхний экран.  
+`popToRoot()` очищает весь стек до корня.
 
----
+## Важные ограничения
 
-## Important Considerations  
+- Все методы должны вызываться с main thread.
+- `Router` не предназначен для одновременного использования с нативным управлением `NavigationStack` в той же ветке навигации.
+- Объекты экранов удерживаются в контейнерах до тех пор, пока не будут удалены из стека.
 
-### Thread Safety  
-⚠️ **All router methods must be called from main thread**  
-Router modifies UI state and is not thread-safe.  
+## Использование
 
-### SwiftUI Integration  
-❗ **Do not mix with native NavigationStack management**  
-Use either router methods or standard NavigationStack APIs, not both simultaneously.  
-
-### Memory Management  
-♻️ Router holds strong references to view controllers until explicitly removed.  
-
----
-
-## Usage  
-
-### 1. Instantiate in App or Root View  
-```swift  
+```swift
 @main
-struct TermeetApp: App {
-  @StateObject var router = Router()
+struct CameraControlApp: App {
+    @StateObject var router = Router()
 
-  var body: some Scene {
-    WindowGroup {
-      NavigationStack(path: router.bindingNavigationStack) {
-        PasswordRecoveryView()
-          .globalNavigationDestination(router: router)
-          .globalPresentedSheet(router: router)
-          .globalFullCoverScreen(router: router)
-      }
-      .environmentObject(router)
+    var body: some Scene {
+        WindowGroup {
+            RouterView(router: router) {
+                HomeView()
+            }
+            .environmentObject(router)
+        }
     }
-  }
 }
-```  
-
-### 2. Define Routes via `Routable` Protocol  
-```swift
-enum AppRoute: Routable {
-  case detail(id: String)
-  case settings
-
-  func makeViewController() -> UIViewController {
-    switch self {
-    case .detail(let id):
-      DetailView(itemID: id).convertToViewController()
-    case .settings:
-      SettingsView().convertToViewController()
-    }
-  }
-}
-```  
-
-### 3. Navigation Operations  
-
-#### Push into Stack (with debounce)  
-```swift
-router.navigate(to: AppRoute.detail(id: "123")) 
-// Disable protection: 
-// router.navigate(to: route, isDoubleTapProtectionEnabled: false)
-```  
-
-#### Present Modals  
-```swift
-// Sheet (default)
-router.present(
-  route: AppRoute.settings,
-  onDismiss: { print("Sheet dismissed") }
-)
-
-// Full-screen cover
-router.present(
-  route: AppRoute.detail(id: "456"),
-  type: .fullScreen,
-  onDismiss: { print("Cover dismissed") }
-)
-```  
-
-#### Dismiss Modals  
-```swift
-router.dismiss()           // Default: .sheet
-router.dismiss(type: .fullScreen)
-```  
-
-#### Stack Management  
-```swift
-router.pop()       // Remove top view
-router.popToRoot() // Clear entire stack
-```  
-
----
-
-## SwiftUI View Modifiers  
-Attach these to root views:  
-
-| Modifier | Description | Required for |
-|----------|-------------|--------------|
-| `.globalNavigationDestination(router:)` | Binds navigation stack | `navigate()` |
-| `.globalPresentedSheet(router:)` | Binds sheet presentations | `present(type: .sheet)` |
-| `.globalFullCoverScreen(router:)` | Binds full-screen covers | `present(type: .fullScreen)` |  
+```
 
 ```swift
-ContentView()
-  .globalNavigationDestination(router: mainRouter)
-  .globalPresentedSheet(router: mainRouter)
-  .globalFullCoverScreen(router: authRouter) 
-```  
-
----
-
-## Advanced Usage  
-
-### Isolated Navigation Flows  
-```swift
-// Feature-specific router
-struct SettingsCoordinator: View {
-  @StateObject private var settingsRouter = Router()
-
-  var body: some View {
-    NavigationStack(path: settingsRouter.bindingNavigationStack) {
-      SettingsListView()
-        .globalNavigationDestination(router: settingsRouter)
-    }
-    .environmentObject(settingsRouter)
-  }
-}
-
-// In parent view
-SettingsCoordinator()
-  .globalPresentedSheet(router: parentRouter) // Shared modal
-```  
-
-### Handling Complex Dismissals  
-```swift
-router.present(
-  route: OnboardingRoute.start,
-  type: .fullScreen,
-  onDismiss: {
-    // Reset parent navigation after dismissal
-    parentRouter.popToRoot()
-    analytics.trackOnboardingComplete()
-  }
-)
-```  
-
-
-## Examples  
-
-### Multi-Step Flow with Debounce  
-```swift  
-enum ShopRoute: Routable {
-  case productDetail(id: UUID)
-  case checkout
-
-  func makeViewController() -> UIViewController { ... }
-}
-
-struct ProductButton: View {
-  @EnvironmentObject var router: Router
-  
-  let productID: UUID
-
-  var body: some View {
-    Button("View Details") {
-      router.navigate(to: ShopRoute.productDetail(id: productID))
-    }
-  }
-}
-```  
-
-### Authentication Flow with Dismiss Handler  
-```swift  
-router.present(
-  route: AuthRoute.login,
-  type: .fullScreen,
-  onDismiss: {
-    // On successful login:
-    router.navigate(to: ProfileRoute.dashboard)
-  }
-)
-
-// Inside LoginView
-Button("Login") {
-  handleLogin { success in
-    if success {
-      router.dismiss(type: .fullScreen)
-    }
-  }
-}
-```  
+router.navigate(to: AppRoute.cameraControl(camera: camera))
+router.present(route: AppRoute.editSaved(camera: camera, onComplete: { _ in }))
+router.popToRoot()
+```
