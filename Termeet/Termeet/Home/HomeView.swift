@@ -12,6 +12,21 @@ private enum Constants {
     enum Colors {
         static let background = Color.white
     }
+    // Filter chips
+    static let chipSpacing: CGFloat = 8
+    static let chipHorizontalPadding: CGFloat = 16
+    static let chipVerticalPadding: CGFloat = 8
+    static let chipBorderWidth: CGFloat = 1
+    // Layout
+    static let topPadding: CGFloat = 8
+    static let horizontalPadding: CGFloat = 16
+    static let verticalPadding: CGFloat = 16
+    static let sectionTopPadding: CGFloat = 8
+    // Empty state
+    static let emptySpacing: CGFloat = 12
+    static let emptyImageMaxWidth: CGFloat = 319
+    static let emptyImageMaxHeight: CGFloat = 299
+    static let emptyTextHorizontalPadding: CGFloat = 40
 }
 
 // MARK: - HomeView
@@ -24,10 +39,10 @@ struct HomeView: View {
                 EmptyStateView()
             } else {
                 FilterChipsView(selectedRole: $viewModel.selectedRole)
-                    .padding(.horizontal)
-                    .padding(.top, 8)
+                    .padding(.horizontal, Constants.horizontalPadding)
+                    .padding(.top, Constants.topPadding)
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 16) {
+                    LazyVStack(alignment: .leading, spacing: Constants.verticalPadding) {
                         ForEach(viewModel.groupedEvents, id: \.date) { section in
                             Section(header: sectionHeader(for: section.date)) {
                                 ForEach(section.events) { event in
@@ -38,17 +53,17 @@ struct HomeView: View {
                                             endDate: event.endDate
                                         )
                                     )
-                                    .padding(.horizontal)
+                                    .padding(.horizontal, Constants.horizontalPadding)
                                 }
                             }
                         }
                     }
-                    .padding(.vertical)
+                    .padding(.vertical, Constants.verticalPadding)
                 }
             }
         }
         .background(Constants.Colors.background)
-        .navigationTitle("home.title")
+        .navigationTitle(HomeLocalization.title)
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -57,8 +72,8 @@ struct HomeView: View {
         Text(viewModel.sectionTitle(for: date))
             .font(AppFonts.headline.bold())
             .foregroundColor(AppColors.grayMainText)
-            .padding(.horizontal)
-            .padding(.top, 8)
+            .padding(.horizontal, Constants.horizontalPadding)
+            .padding(.top, Constants.sectionTopPadding)
     }
 }
 
@@ -69,17 +84,17 @@ struct FilterChipsView: View {
     private let allRoles: [EventRole?] = [nil] + EventRole.allCases
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Constants.chipSpacing) {
             ForEach(allRoles, id: \.self) { role in
-                let titleKey: LocalizedStringKey =
-                    role == nil ? "home.filter.all" : LocalizedStringKey(role!.localizedKey)
+                let keyString = role?.localizedKey ?? HomeLocalization.filterAll
+                let titleKey = LocalizedStringKey(keyString)
                 let isSelected = (role == nil && selectedRole == nil) || role == selectedRole
 
                 Button(action: { selectedRole = role }) {
                     Text(titleKey)
                         .font(AppFonts.subheadline)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, Constants.chipHorizontalPadding)
+                        .padding(.vertical, Constants.chipVerticalPadding)
                         .background(
                             Capsule()
                                 .fill(Color.clear)
@@ -89,7 +104,7 @@ struct FilterChipsView: View {
                             Capsule()
                                 .stroke(
                                     isSelected ? AppColors.grayMainText : AppColors.accentDividersOutlines,
-                                    lineWidth: 1
+                                    lineWidth: Constants.chipBorderWidth
                                 )
                         )
                 }
@@ -103,20 +118,20 @@ struct FilterChipsView: View {
 // MARK: - Empty State
 struct EmptyStateView: View {
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Constants.emptySpacing) {
             Image("noEvents")
                 .resizable()
                 .scaledToFit()
-                .frame(maxWidth: 319, maxHeight: 299)
-            Text("home.empty.title")
+                .frame(maxWidth: Constants.emptyImageMaxWidth, maxHeight: Constants.emptyImageMaxHeight)
+            Text(HomeLocalization.emptyTitle)
                 .font(AppFonts.title2.bold())
                 .foregroundColor(AppColors.grayMainText)
 
-            Text("home.empty.message")
+            Text(HomeLocalization.emptyMessage)
                 .font(AppFonts.body)
                 .foregroundColor(AppColors.graySecondaryIcons)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
+                .padding(.horizontal, Constants.emptyTextHorizontalPadding)
 
             Spacer()
         }

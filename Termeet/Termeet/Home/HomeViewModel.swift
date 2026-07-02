@@ -32,7 +32,7 @@ class HomeViewModel: ObservableObject {
     func sectionTitle(for date: Date) -> String {
         let calendar = Calendar.current
         if calendar.isDateInToday(date) {
-            return NSLocalizedString("home.section.today", comment: "")
+            return NSLocalizedString(HomeLocalization.sectionToday, comment: "")
         }
         let formatter = DateFormatter()
         formatter.dateFormat = "dd.MM"

@@ -11,6 +11,8 @@ private enum Constants {
     enum Colors {
         static let background = Color(light: .init(hex: 0xF8F8F8), dark: .init(hex: 0xF8F8F8))
     }
+    static let cornerRadius: CGFloat = 16
+    static let padding: CGFloat = 16
 }
 
 struct EventHomeShortModel {
@@ -33,10 +35,9 @@ struct EventHomeShortView: View {
             Text("\(timeStart) – \(timeEnd)")
                 .font(AppFonts.subheadline)
         }
-        .padding()
+        .padding(Constants.padding)
         .background(Constants.Colors.background)
-        .cornerRadius(16)
-
+        .cornerRadius(Constants.cornerRadius)
     }
 }
 
