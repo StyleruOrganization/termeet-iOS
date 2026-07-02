@@ -12,6 +12,7 @@ class NotificationsViewModel: ObservableObject {
     @Published var selectedFilter: NotificationFilter = .all
     @Published var notifications: [NotificationItem] = []
 
+    // Сервис теперь опциональный!
     private var toastService: ToastOverlayService?
 
     init(notifications: [NotificationItem] = []) {
@@ -57,13 +58,19 @@ class NotificationsViewModel: ObservableObject {
     }
 
     func clearAllNotifications() {
-        let oldNotifications = notifications
-        notifications.removeAll()
-
-        // Используем guard let для безопасного извлечения (без !)
+        // Безопасно извлекаем сервис
         guard let toastService = toastService else {
             return
         }
+
+        // ЗАЩИТА ОТ ПОВТОРНЫХ БЫСТРЫХ КЛИКОВ:
+        // Если плашка уже показывает анимацию, игнорируем вызов
+        guard !toastService.isPresented else {
+            return
+        }
+
+        let oldNotifications = notifications
+        notifications.removeAll()
 
         toastService.show(message: NSLocalizedString(NotificationsLocalization.clearAllToastMessage, comment: "")) {
             self.notifications = oldNotifications
