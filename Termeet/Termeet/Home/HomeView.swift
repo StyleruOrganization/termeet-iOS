@@ -20,13 +20,12 @@ struct HomeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            FilterChipsView(selectedRole: $viewModel.selectedRole)
-                .padding(.horizontal)
-                .padding(.top, 8)
-
             if viewModel.filteredEvents.isEmpty {
                 EmptyStateView()
             } else {
+                FilterChipsView(selectedRole: $viewModel.selectedRole)
+                    .padding(.horizontal)
+                    .padding(.top, 8)
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 16) {
                         ForEach(viewModel.groupedEvents, id: \.date) { section in
@@ -83,9 +82,9 @@ struct FilterChipsView: View {
                         .padding(.vertical, 8)
                         .background(
                             Capsule()
-                                .fill(isSelected ? AppColors.brandMain : Color.clear)
+                                .fill(Color.clear)
                         )
-                        .foregroundColor(isSelected ? .white : AppColors.grayMainText)
+                        .foregroundColor(AppColors.grayMainText)
                         .overlay(
                             Capsule()
                                 .stroke(
@@ -96,6 +95,7 @@ struct FilterChipsView: View {
                 }
                 .buttonStyle(.plain)
             }
+            Spacer()
         }
     }
 }
@@ -104,7 +104,10 @@ struct FilterChipsView: View {
 struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: 12) {
-            Spacer()
+            Image("noEvents")
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: 319, maxHeight: 299)
             Text("home.empty.title")
                 .font(AppFonts.title2.bold())
                 .foregroundColor(AppColors.grayMainText)
