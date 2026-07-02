@@ -12,8 +12,15 @@ class NotificationsViewModel: ObservableObject {
     @Published var selectedFilter: NotificationFilter = .all
     @Published var notifications: [NotificationItem] = []
 
+    private var toastService: ToastOverlayService?
+
     init(notifications: [NotificationItem] = []) {
         self.notifications = notifications
+    }
+
+    // Метод внедрения зависимости
+    func inject(toastService: ToastOverlayService) {
+        self.toastService = toastService
     }
 
     var filteredNotifications: [NotificationItem] {
@@ -33,7 +40,6 @@ class NotificationsViewModel: ObservableObject {
         let grouped = Dictionary(grouping: filteredNotifications) { item in
             calendar.startOfDay(for: item.date)
         }
-        // Исправление: сортируем по убыванию даты, чтобы "Сегодня" была первой
         return grouped.map { (date: $0.key, events: $0.value) }
                       .sorted { $0.date > $1.date }
     }
@@ -50,8 +56,17 @@ class NotificationsViewModel: ObservableObject {
         notifications.removeAll { $0.id == id }
     }
 
-    // Новая функция для кнопки "Очистить все"
     func clearAllNotifications() {
+        let oldNotifications = notifications
         notifications.removeAll()
+
+        // Используем guard let для безопасного извлечения (без !)
+        guard let toastService = toastService else {
+            return
+        }
+
+        toastService.show(message: NSLocalizedString(NotificationsLocalization.clearAllToastMessage, comment: "")) {
+            self.notifications = oldNotifications
+        }
     }
 }

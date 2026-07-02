@@ -29,6 +29,8 @@ private enum Constants {
 struct NotificationsView: View {
     @StateObject private var viewModel: NotificationsViewModel
     @EnvironmentObject private var router: Router
+    // Получаем сервис из Environment
+    @EnvironmentObject private var toastService: ToastOverlayService
 
     init(viewModel: NotificationsViewModel = NotificationsViewModel()) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -39,12 +41,10 @@ struct NotificationsView: View {
             if viewModel.notifications.isEmpty {
                 EmptyNotificationsStateView()
             } else {
-                // Фильтры остаются вне списка
                 NotificationsFilterChipsView(selectedFilter: $viewModel.selectedFilter)
                     .padding(.horizontal, Constants.horizontalPadding)
                     .padding(.top, Constants.topPadding)
 
-                // Заменили ScrollView + LazyVStack на нативный List
                 List {
                     ForEach(viewModel.groupedNotifications, id: \.date) { section in
                         Section(header: sectionHeader(for: section.date)) {
@@ -58,7 +58,6 @@ struct NotificationsView: View {
                                         router.navigate(to: NotificationRoute.notificationDetail(notification: item))
                                     }
                                 )
-                                // Убираем стандартные отступы списка и разделители
                                 .listRowInsets(EdgeInsets(top: 4, leading: Constants.horizontalPadding, bottom: 4, trailing: Constants.horizontalPadding))
                                 .listRowSeparator(.hidden)
                                 .listRowBackground(Color.clear)
@@ -67,7 +66,6 @@ struct NotificationsView: View {
                     }
                 }
                 .listStyle(.plain)
-                // Скрываем системный фон списка, чтобы был белый
                 .scrollContentBackground(.hidden)
                 .background(Constants.Colors.background)
             }
@@ -75,6 +73,10 @@ struct NotificationsView: View {
         .background(Constants.Colors.background)
         .navigationTitle(NotificationsLocalization.title)
         .navigationBarTitleDisplayMode(.inline)
+        // При появлении экрана вкладываем сервис в ViewModel
+        .onAppear {
+            viewModel.inject(toastService: toastService)
+        }
     }
 
     @ViewBuilder
@@ -86,7 +88,6 @@ struct NotificationsView: View {
 
             Spacer()
 
-            // Кнопка очистки появляется только в секции "Сегодня"
             if Calendar.current.isDateInToday(date) {
                 Button(action: {
                     viewModel.clearAllNotifications()
@@ -249,7 +250,59 @@ struct NotificationDetailView: View {
     }
 }
 
-// MARK: - #Preview с данными и пустое состояние
+// MARK: - Previews
+struct NotificationsPreviewContainer: View {
+    let viewModel: NotificationsViewModel
+    @StateObject private var router = Router()
+    @StateObject private var toastService = ToastOverlayService()
+
+    var body: some View {
+        RouterView(router: router) {
+            NotificationsView(viewModel: viewModel)
+                .environmentObject(toastService)
+        }
+        .environmentObject(router)
+    }
+}
+
+struct NotificationsEmptyPreviewContainer: View {
+    @StateObject private var router = Router()
+    @StateObject private var toastService = ToastOverlayService()
+
+    var body: some View {
+        RouterView(router: router) {
+            NotificationsView(viewModel: NotificationsViewModel(notifications: []))
+                .environmentObject(toastService)
+        }
+        .environmentObject(router)
+    }
+}
+
+struct TabBarPreviewContainer: View {
+    let viewModel: NotificationsViewModel
+    @StateObject private var router = Router()
+    @StateObject private var toastService = ToastOverlayService()
+    @State private var selectedTab: Tab = .notifications
+
+    var body: some View {
+        RouterView(router: router) {
+            ZStack(alignment: .bottom) {
+                NotificationsView(viewModel: viewModel)
+                    .environmentObject(toastService)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+
+                TabBar(selected: $selectedTab)
+                    .environmentObject(toastService)
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 50)
+            }
+            .edgesIgnoringSafeArea(.bottom)
+            .background(Color.white)
+        }
+        .environmentObject(router)
+    }
+}
+
 #Preview("Notifications View") {
     let now = Date()
     let mockNotifications = [
@@ -272,36 +325,36 @@ struct NotificationDetailView: View {
             isRead: false
         )
     ]
-
     let viewModel = NotificationsViewModel(notifications: mockNotifications)
-
-    struct PreviewView: View {
-        let viewModel: NotificationsViewModel
-        @StateObject var router = Router()
-
-        var body: some View {
-            RouterView(router: router) {
-                NotificationsView(viewModel: viewModel)
-            }.environmentObject(router)
-        }
-    }
-
-    return PreviewView(viewModel: viewModel)
+    return NotificationsPreviewContainer(viewModel: viewModel)
 }
 
 #Preview("Empty State") {
-    let emptyViewModel = NotificationsViewModel(notifications: [])
+    return NotificationsEmptyPreviewContainer()
+}
 
-    struct PreviewEmptyView: View {
-        let viewModel: NotificationsViewModel
-        @StateObject var router = Router()
-
-        var body: some View {
-            RouterView(router: router) {
-                NotificationsView(viewModel: viewModel)
-            }.environmentObject(router)
-        }
-    }
-
-    return PreviewEmptyView(viewModel: emptyViewModel)
+#Preview("With TabBar") {
+    let now = Date()
+    let mockNotifications = [
+        NotificationItem(
+            title: "Время для «Название» назначено",
+            subtitle: "Опрос «Название» завершен. Пользователь Иванов Иван выбрал итоговое время вашей встречи. Перейдите в календарь, чтобы посмотреть",
+            date: Calendar.current.date(bySettingHour: 12, minute: 19, second: 0, of: now) ?? now,
+            isRead: false
+        ),
+        NotificationItem(
+            title: "Время для «Название» назначено",
+            subtitle: "Опрос «Название» завершен. Пользователь Иванов Иван выбрал итоговое время вашей встречи. Перейдите в календарь, чтобы посмотреть",
+            date: Calendar.current.date(bySettingHour: 12, minute: 19, second: 0, of: now) ?? now,
+            isRead: true
+        ),
+        NotificationItem(
+            title: "Время для «Название» назначено",
+            subtitle: "Опрос «Название» завершен. Пользователь Иванов Иван выбрал итоговое время вашей встречи. Перейдите в календарь, чтобы посмотреть",
+            date: Calendar.current.date(byAdding: .day, value: -2, to: now) ?? now,
+            isRead: false
+        )
+    ]
+    let viewModel = NotificationsViewModel(notifications: mockNotifications)
+    return TabBarPreviewContainer(viewModel: viewModel)
 }

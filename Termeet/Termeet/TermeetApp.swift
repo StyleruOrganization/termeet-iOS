@@ -9,13 +9,10 @@ import SwiftUI
 
 @main
 struct TermeetApp: App {
-    @StateObject var router = Router()
-
     var body: some Scene {
         WindowGroup {
-            RouterView(router: router) {
-                RootView()
-            }.environmentObject(router)
+            // Теперь RootView сам управляет и Router, и ToastManager'ом
+            RootView()
         }
     }
 }

@@ -17,9 +17,8 @@ enum NotificationsLocalization {
     static let emptyTitle = "notifications.empty.title"
     static let emptyMessage = "notifications.empty.message"
     static let deleteAction = "notifications.action.delete"
-    static let clearAll = "notifications.section.clear.all"  // Ключ для кнопки очистки
-
-    // Локализация для детального экрана
+    static let clearAll = "notifications.section.clear.all"
+    static let clearAllToastMessage = "notifications.toast.clear_all"
     static let detailTitle = "notifications.detail.title"
     static let backButton = "notifications.detail.back"
 }
